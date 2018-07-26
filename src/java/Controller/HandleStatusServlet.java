@@ -6,8 +6,6 @@
 package Controller;
 
 import BusinessLogic.MemberService;
-import BusinessLogic.PaymentService;
-import DTO.User;
 import java.io.IOException;
 import java.io.PrintWriter;
 import javax.servlet.ServletException;
@@ -21,8 +19,8 @@ import javax.servlet.http.HttpSession;
  *
  * @author Home
  */
-@WebServlet(name = "PaymentServlet", urlPatterns = {"/PaymentServlet"})
-public class PaymentServlet extends HttpServlet {
+@WebServlet(name = "HandleStatusServlet", urlPatterns = {"/HandleStatusServlet"})
+public class HandleStatusServlet extends HttpServlet {
 
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
@@ -39,32 +37,27 @@ public class PaymentServlet extends HttpServlet {
         try (PrintWriter out = response.getWriter()) {
             
             HttpSession session = request.getSession();
-                User user = (User)session.getAttribute("user");
-                double amount = Double.parseDouble(request.getParameter("payAmount"));
-                double newAmount = amount + user.getBalance();
-                
-                //prevent user from paying too much into their account
-                if(newAmount<=10000){
-                    PaymentService payment = new PaymentService();
-                
-                    //attempt to make payment and update database and return appropriate message
-                    boolean paymentReturn = payment.updatePayment(user, amount);
-
-                    if (paymentReturn){
-                        //user.setBalance(Double.parseDouble(new MemberService().getColumn(user.getID(),"balance")));
-                        session.setAttribute("user", user);
-                        session.setAttribute("success", "Payment made successfully."); //set success message
-                        session.setAttribute("paymentlist", payment.getRecordsById(user));
-
-                        response.sendRedirect("user_dashboard.jsp");
-                    }else{
-                        session.setAttribute("error", "Failed to make payment. Contact our helpdesk for assistance."); //set error message 
-                        response.sendRedirect("user_dashboard.jsp");
-                    }
-                }else{
-                    session.setAttribute("error", "Your balance will exceed &#163; 10,000 limit. Pay smaller amount."); //set error message 
-                    response.sendRedirect("user_dashboard.jsp");
-                }
+            
+            String suspend = request.getParameter("suspend");
+            String approve = request.getParameter("approve");
+            MemberService member = new MemberService();
+            
+            //change user status based on given conditions
+            if(suspend!=null){
+                member.updateStatus(suspend, "SUSPENDED");
+            }else if(approve!=null){
+                member.updateStatus(approve, "APPROVED");
+            }
+            
+            //update session userList
+            session.setAttribute("memberlist", member.getAllRecords());
+            //set the tab view upon return
+            session.setAttribute("home", false);
+            session.setAttribute("users", true);
+            session.setAttribute("claims", false);
+            session.setAttribute("search", false);
+            
+            response.sendRedirect("admin_dashboard.jsp");
         }
     }
 

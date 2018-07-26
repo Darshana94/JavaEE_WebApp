@@ -5,6 +5,7 @@
  */
 package BusinessLogic;
 
+import DTO.Claim;
 import DTO.User;
 import Model.Claims;
 import Util.NewHibernateUtil;
@@ -23,29 +24,19 @@ import org.hibernate.Transaction;
  */
 public class ClaimService {
     
-    public List getAllClaims(){
-        List list = new ArrayList();
+    public List<Claims> getAllClaims(){
+        
+        List<Claims> list = new ArrayList<Claims>();
         Session session = null;
         Transaction tx = null;
-        DTO.Claim claimModel = new DTO.Claim();
         
         session = NewHibernateUtil.getSessionFactory().openSession();
         tx = session.getTransaction();
         tx.begin();
-        Query query = session.createQuery("FROM Claims");
-        List<Claims> claimsModel = (List<Claims>) query.list();
-        claimsModel.forEach(element -> {
-            
-            claimModel.setId(element.getId().toString());
-            claimModel.setAmount(element.getAmount());
-            claimModel.setDate(element.getDate());
-            claimModel.setMem_id(element.getMemId());
-            claimModel.setRationale(element.getRationale());
-            claimModel.setStatus(element.getStatus());
-            
-            list.add(claimModel);
-        });
         
+        list = session.createQuery("from Claims").list();
+        
+        tx.commit();
         session.close();
 
         return list;
@@ -57,13 +48,13 @@ public class ClaimService {
         List list = new ArrayList();
         Session session = null;
         Transaction tx = null;
-        DTO.Claim claimModel = new DTO.Claim();
+        Claim claimModel = new Claim();
         
         session = NewHibernateUtil.getSessionFactory().openSession();
         tx = session.getTransaction();
         tx.begin();
         Query query = session.createQuery("FROM Claims WHERE mem_id='"+ user.getID() +"'");
-        List<Claims> queryResult = (List<Claims>) query.list();
+        List<Claims> queryResult = (List<Claims>)query.list();
         queryResult.forEach(element -> {
             
             claimModel.setId(element.getId().toString());
@@ -91,7 +82,7 @@ public class ClaimService {
         tx = session.getTransaction();
         tx.begin();
         Claims claimModel = new Claims();
-            claimModel.setId(Integer.parseInt(userid));
+            claimModel.setMemId(userid);
             claimModel.setDate(new Date());
             claimModel.setRationale(claimRational);
             claimModel.setStatus("SUBMITTED");

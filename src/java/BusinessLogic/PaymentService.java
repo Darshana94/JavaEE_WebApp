@@ -30,43 +30,28 @@ public class PaymentService {
         Session session = null;
         Transaction tx = null;
         boolean returnValue = false;
-        
-        try
-        {
-                session = NewHibernateUtil.getSessionFactory().openSession();
-                tx = session.getTransaction();
-                tx.begin();
-                
-                Query query = session.createQuery("FROM Users where id='"+ user.getID() +"'");
-                Members queryResult = (Members)query.uniqueResult();// stmt.executeQuery(sql);
-                queryResult.setBalance((float) (queryResult.getBalance()+ payment));
-                session.update(queryResult);
-                
-                Payments paymentModel = new Payments();
-                paymentModel.setMemId(user.getID());
-                paymentModel.setTypeOfPayment("PAYMENT");
-                paymentModel.setAmount((float) payment);
-                paymentModel.setDate(new Date());
-                
-                session.save(paymentModel);
-                tx.commit();
-                
-                returnValue = true;
+       
+        session = NewHibernateUtil.getSessionFactory().openSession();
+        tx = session.getTransaction();
+        tx.begin();
 
-        }
-        catch(Exception e)
-        {
-                if (tx != null)
-                {
-                    tx.rollback();
-                }
-                e.printStackTrace();
-        }
-        finally
-        {
-            session.close();
-        }
+//            Query query = session.createQuery("FROM members where id='"+ user.getID() +"'");
+//            Members queryResult = (Members)query.uniqueResult();// stmt.executeQuery(sql);
+//            queryResult.setBalance((float) (queryResult.getBalance()+ payment));
+//            session.update(queryResult);
+
+        Payments paymentModel = new Payments();
+        paymentModel.setMemId(user.getID());
+        paymentModel.setTypeOfPayment("PAYMENT");
+        paymentModel.setAmount((float)payment);
+        paymentModel.setDate(new Date());
+        paymentModel.setTime(new Date());
+
+        session.save(paymentModel);
+        tx.commit();
+        session.close();
         
+        returnValue = true;
         return returnValue;
     }
     
@@ -100,6 +85,23 @@ public class PaymentService {
         session.close();
         return list;
     }
+    
+//       public List<Payments> getAllRecords()
+//    {
+//        Session session = null;
+//        Transaction tx = null;
+//        List<Payments> list = new ArrayList<Payments>();
+//        
+//        session = NewHibernateUtil.getSessionFactory().openSession();
+//        tx = session.getTransaction();
+//        tx.begin();
+//
+//        Query query = session.createQuery("FROM Payments");
+//                
+//        tx.commit();
+//        session.close();
+//        return list;
+//    }
     
     public List getRecordsById(User user)
     {

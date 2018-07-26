@@ -90,7 +90,7 @@ public class User {
 
       public void setID(String newID) {
          ID = newID;
-			}
+	}
 				
       public String isUserValid() {
          return userValid;

@@ -74,8 +74,8 @@ public class ClaimServlet extends HttpServlet {
             int thisYear = today.get(Calendar.YEAR);
             int claimAmount = 0;
             //add claim to DB
-            ClaimService claimDao = new ClaimService();
-            List list = claimDao.getClaimsById(user);
+            ClaimService claim = new ClaimService();
+            List list = claim.getClaimsById(user);
             
             for(Object c:list){
                 Claim userClaim = (Claim)c;
@@ -86,11 +86,11 @@ public class ClaimServlet extends HttpServlet {
             
             
             if(minDays<diffDays){
-                boolean addClaimReturn = claimDao.add_claim(userid, claim_amount,claimRational);
+                boolean addClaimReturn = claim.add_claim(userid, claim_amount,claimRational);
                 //if claim added successfully
                 if (addClaimReturn){
                     session.setAttribute("success", "Claim added successfully"); //set success message
-                    session.setAttribute("claimlist", claimDao.getClaimsById(user));
+                    session.setAttribute("claimlist", claim.getClaimsById(user));
 
                     response.sendRedirect("user_dashboard.jsp");
                 }else{

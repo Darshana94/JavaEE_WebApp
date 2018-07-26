@@ -9,10 +9,13 @@ import BusinessLogic.ClaimService;
 import BusinessLogic.LoginService;
 import BusinessLogic.MemberService;
 import BusinessLogic.PaymentService;
+import DTO.Claim;
 import DTO.User;
+import Model.Claims;
 import Model.Users;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.Cookie;
@@ -46,9 +49,9 @@ public class LoginServlet extends HttpServlet {
             String userid = request.getParameter("userid"); //get user input
             String passwordinput = request.getParameter("passwordinput");
             
-            //Cookie cookie = new Cookie("userid",userid); //add cookie
-            //cookie.setMaxAge(20*60); //cookie age is (number) * 60 seconds
-            //response.addCookie(cookie); //send cookie to client
+            Cookie cookie = new Cookie("userid",userid); //add cookie
+            cookie.setMaxAge(20*60); //cookie age is (number) * 60 seconds
+            response.addCookie(cookie); //send cookie to client
             
             User userInput = new User(); //new user object
             userInput.setID(userid);    //set user ID to User object
@@ -60,22 +63,25 @@ public class LoginServlet extends HttpServlet {
             MemberService member = new MemberService();
             PaymentService payments = new PaymentService();
             ClaimService claims = new ClaimService();
-            
             //boolean isAdmin = loginDaoReturn.matches("ADMIN");
-
+            
+            
             
             if(loginDaoReturn.equals("SUCCESS")){ //if password and username matches
                 User user = (User)member.getSingleById(userid);
-                session.setAttribute("user", user); //set User object as session wide attribute
+                session.setAttribute("user", user); //set User object as session wide attribute                
                 session.setAttribute("paymentlist", payments.getRecordsById(user));
                 session.setAttribute("claimlist", claims.getClaimsById(user));                
-                //System.out.println(payments.getRecordsById(user));
+                //System.out.println(claims.getClaimsById(user));
                 response.sendRedirect("user_dashboard.jsp");
             }  
             else if(loginDaoReturn.equals("ADMIN")){ //if user is an Admin
             
-                session.setAttribute("claimlist", claims.getAllClaims());
-                session.setAttribute("userlist", member.getAllRecords());
+                session.setAttribute("claimlist", claims.getAllClaims());                
+                session.setAttribute("userlist", member.getAll());
+                //System.out.println(member.getAll());
+                session.setAttribute("memberlist", member.getAllRecords());
+                //System.out.println(member.getAllRecords());
                 session.setAttribute("paymentlist", payments.getAllRecords());
                 
                 //set the tab view upon return

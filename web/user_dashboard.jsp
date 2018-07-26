@@ -12,6 +12,7 @@
 <%@ page import="DTO.Payments" %>
 <%@ page import="DTO.User" %>
 <%@ page import="DTO.Claim"%>
+<%@ page import="Model.Claims"%>
 <%! DecimalFormat df = new DecimalFormat("##,##0.00"); %>
 <%! SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MM-yyyy"); %>
 <% User user = (User)session.getAttribute("user");%>
@@ -192,10 +193,10 @@
                                             out.println("</tr>");
                                         }else{
                                             for(int i=0;i<claimlist.size();i++){
-                                                Claim claim = (Claim)claimlist.get(i);
+                                                Claims claim = (Claims)claimlist.get(i);
                                                 out.println("<tr>");
                                                 out.println("<td>" + (i+1) + "</td>");
-                                                out.println("<td>" + claim.getMem_id()+ "</td>");
+                                                out.println("<td>" + claim.getMemId()+ "</td>");
                                                 out.println("<td>" + claim.getRationale() + "</td>");
                                                 out.println("<td>" + claim.getStatus() + "</td>");
                                                 out.println("<td>&#163; " + df.format(claim.getAmount()) + "</td>");

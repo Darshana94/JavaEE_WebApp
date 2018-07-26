@@ -12,8 +12,9 @@
 <%@ page import="java.util.Date" %>
 <%@ page import="java.sql.*" %>
 <%@ page import="DTO.User" %>
-<%@ page import="DTO.Claim" %>
 <%@ page import="DTO.Payments" %>
+<%@ page import="Model.Claims" %>
+<%@ page import="Model.Members" %>
 <%! String applied = null,approved = null,suspended = null, submitted = null,accepted = null,rejected = null,claimid = null, memid = null ;%>
 <%! Double distributed = 0.00, fees = 0.00, MEM_FEE = 10.00;%>
 <%! Boolean homeTab,usersTab,claimsTab,searchTab;%>
@@ -25,7 +26,7 @@
 <% User user = (User)session.getAttribute("searchuser");%>
 <% paymentlist = (ArrayList)session.getAttribute("paymentlist");%>
 <% userList = (ArrayList)session.getAttribute("userlist");%>
-<% memList = (ArrayList)session.getAttribute("userlist");%>
+<% memList = (ArrayList)session.getAttribute("memberlist");%>
 <% userClaims = (ArrayList)session.getAttribute("claimlist");%>
 <% memid = (String)session.getAttribute("memid");%>
 <% applied = (String)session.getAttribute("applied");%>
@@ -229,15 +230,17 @@
                                     <div class="panel-body">
                                         <%           
                                             int apply = 0,approve = 0,suspend = 0;
-                                            for(Object e:userList){
-                                                if (((User)e).isUserValid() == "APPLIED"){
-                                                    apply++;break;
+                                            for(int i=0;i<memList.size();i++){
+                                                Members m = (Members)memList.get(i);
+                                                
+                                                if(m.getStatus() == "APPLIED"){
+                                                    apply++;
                                                 }
-                                                else if (((User)e).isUserValid() == "APPROVED"){
-                                                approve++;break;
+                                                else if(m.getStatus() == "APPROVED"){
+                                                    approve++;
                                                 }
-                                                else if (((User)e).isUserValid() == "SUSPENDED"){
-                                                 suspend++;break;
+                                                else if(m.getStatus() == "SUSPENDED"){
+                                                    suspend++;
                                                 }
                                             }
                                         %>
@@ -285,7 +288,7 @@
                                                 %>
                                             </div>
                                             <div class="col-md-12">
-                                                <form action="charge-members" method="POST">
+                                                <form action="ChargeMembershipServlet" method="POST">
                                                     <div class="form-group">
                                                         <button type="submit"class="btn btn-primary btn-block" 
                                                                 id="fees" name="fees"
@@ -322,11 +325,11 @@
                                                     int size = 0;
 
                                                     for(Object uc:userClaims){
-                                                        checkClaim.setTime(((Claim)uc).getDate());
+                                                        checkClaim.setTime(((Claims)uc).getDate());
                                                         if(today.get(Calendar.YEAR)==checkClaim.get(Calendar.YEAR)){
-                                                            if (((Claim)uc).getStatus() == "ACCEPTED"){thisYearClaims += ((Claim)uc).getAmount();break;}
-                                                            else if (((Claim)uc).getStatus() == "SUBMITTED"){submittedClaims += ((Claim)uc).getAmount();break;}
-                                                            else if (((Claim)uc).getStatus() == "REJECTED"){rejectedClaims += ((Claim)uc).getAmount();break;}
+                                                            if (((Claims)uc).getStatus() == "ACCEPTED"){thisYearClaims += ((Claims)uc).getAmount();break;}
+                                                            else if (((Claims)uc).getStatus() == "SUBMITTED"){submittedClaims += ((Claims)uc).getAmount();break;}
+                                                            else if (((Claims)uc).getStatus() == "REJECTED"){rejectedClaims += ((Claims)uc).getAmount();break;}
                                                         }
                                                     }
                                                     size = apply + approve + suspend;
@@ -346,7 +349,7 @@
                                                 <h2>&#163; <%=df.format(average)%></h2>
                                             </div>
                                             <div class="col-md-12">
-                                                <form action="charge-members" method="POST">
+                                                <form action="ChargeMembershipServlet" method="POST">
                                                     <div class="form-group">
                                                         <button type="submit"class="btn btn-primary btn-block" 
                                                                 id="distributed" name="distributed"
@@ -409,7 +412,7 @@
                                                     double allTimeClaims = 0.00;
                                                     
                                                     for(Object uc:userClaims){
-                                                        allTimeClaims += ((Claim)uc).getAmount();
+                                                        allTimeClaims += ((Claims)uc).getAmount();
                                                     }
                                                     out.println("&#163; " + df.format(allTimeClaims));
                                                 %>
@@ -455,17 +458,17 @@
 
                                         List filter = new ArrayList();
 
-                                        for(Object u:userList){
-                                            if(applied!=null) { if((((User)u).isUserValid()).equals(applied)) { filter.add(u); } }
-                                            if(approved!=null) { if((((User)u).isUserValid()).equals(approved)) { filter.add(u); } }
-                                            if(suspended!=null) { if((((User)u).isUserValid()).equals(suspended)) { filter.add(u); } }
+                                        for(Object u:memList){
+                                            if(applied!=null) { if((((Members)u).getStatus()).equals(applied)) { filter.add(u); } }
+                                            if(approved!=null) { if((((Members)u).getStatus()).equals(approved)) { filter.add(u); } }
+                                            if(suspended!=null) { if((((Members)u).getStatus()).equals(suspended)) { filter.add(u); } }
                                         }
                                         if(applied!=null || approved!=null || suspended!=null) { memList = filter; }
 
                                         if(memid!=null && !memid.equals("")){
                                             List filterMember = new ArrayList();
                                             for(Object u:memList){
-                                                if(((User)u).getID().equals(memid)){
+                                                if(((Members)u).getId().equals(memid)){
                                                     filterMember.add(u);
                                                 }
                                             }
@@ -478,36 +481,36 @@
                                             out.println("</tr>");
                                         }else{
                                             for(int i=0;i<memList.size();i++){
-                                                User member = (User)memList.get(i);
+                                                Members member = (Members)memList.get(i);
 
-                                                if( member.isUserValid() == "APPLIED"){out.println("<tr class=\"warning\">");break;}
-                                                else if( member.isUserValid() == "APPROVED"){out.println("<tr class=\"success\">");break;}
-                                                else if( member.isUserValid() == "SUSPENDED"){out.println("<tr class=\"danger\">");break;}
+                                                if( member.getStatus() == "APPLIED"){out.println("<tr class=\"warning\">");}
+                                                else if( member.getStatus() == "APPROVED"){out.println("<tr class=\"success\">");}
+                                                else if( member.getStatus() == "SUSPENDED"){out.println("<tr class=\"danger\">");}
                                                 else {out.println("<tr class=\"active text-muted\">");}
                             
                                                 out.println("<td>" + (i+1) + "</td>");
                                                 //out.println("<td>" + member.getID() + "</td>");
-                                                out.println("<td>" + member.getFirstName() + " " + member.getLastName() + "</td>");
+                                                out.println("<td>" + member.getName() + "</td>");
                                                 out.println("<td>" + member.getAddress() + "</td>");
-                                                out.println("<td>" + member.getDOB() + "</td>");
+                                                out.println("<td>" + member.getDob() + "</td>");
 
-                                                String stringDOR = DATE_FORMAT.format(member.getDOR());
+                                                String stringDOR = DATE_FORMAT.format(member.getDor());
 
                                                 out.println("<td>" + stringDOR + "</td>");
                                                 //out.println("<td class=\"text-center\">" + member.isUserValid()+ "</td>");
                                                 out.println("<td class=\"text-right\">&#163; " + df.format(member.getBalance()) + "</td>");
                                                 out.println("<td>");
-                                                out.println("<form action=\"update-status\" method=\"POST\">");
-                                                if(member.isUserValid().equals("APPROVED")){
+                                                out.println("<form action=\"HandleStatusServlet\" method=\"POST\">");
+                                                if(member.getStatus().equals("APPROVED")){
                                                     out.println("<button class=\"btn btn-default btn-sm\" type=\"submit\" "
                                                             + "data-toggle=\"modal\" data-target=\"#dimmer\""
-                                                            + "name=\"suspend\" value=\""+member.getID()+"\">SUSPEND</button>");
-                                                }else if(member.isUserValid().equals("DELETED")){
+                                                            + "name=\"suspend\" value=\""+member.getId()+"\">SUSPEND</button>");
+                                                }else if(member.getStatus().equals("DELETED")){
                                                     out.println("");
                                                 }else{
                                                     out.println("<button class=\"btn btn-default btn-sm\" type=\"submit\" "
                                                             + "data-toggle=\"modal\" data-target=\"#dimmer\""
-                                                            + "name=\"approve\" value=\""+member.getID()+"\">APPROVE</button>");
+                                                            + "name=\"approve\" value=\""+member.getId()+"\">APPROVE</button>");
                                                 }
                                                 out.println("</form>");
                                                 out.println("</td>");
@@ -538,16 +541,16 @@
                                         List claimfilter = new ArrayList();
 
                                         for(Object c:userClaims){
-                                            if(submitted!=null) { if((((Claim)c).getStatus()).equals(submitted)) { claimfilter.add(c); } }
-                                            if(accepted!=null) { if((((Claim)c).getStatus()).equals(accepted)) { claimfilter.add(c); } }
-                                            if(rejected!=null) { if((((Claim)c).getStatus()).equals(rejected)) { claimfilter.add(c); } }
+                                            if(submitted!=null) { if((((Claims)c).getStatus()).equals(submitted)) { claimfilter.add(c); } }
+                                            if(accepted!=null) { if((((Claims)c).getStatus()).equals(accepted)) { claimfilter.add(c); } }
+                                            if(rejected!=null) { if((((Claims)c).getStatus()).equals(rejected)) { claimfilter.add(c); } }
                                         }
                                         if(submitted!=null || accepted!=null || rejected!=null) { userClaims = claimfilter; }
 
                                         if(claimid!=null && !claimid.equals("")){
                                             List filterUser = new ArrayList();
                                             for(Object c:userClaims){
-                                                if(((Claim)c).getMem_id().equals(claimid)){
+                                                if(((Claims)c).getMemId().equals(claimid)){
                                                     filterUser.add(c);
                                                 }
                                             }
@@ -560,7 +563,7 @@
                                             out.println("</tr>");
                                         }else{
                                             for(int i=0;i<userClaims.size();i++){
-                                                Claim claim = (Claim)userClaims.get(i);
+                                                Claims claim = (Claims)userClaims.get(i);
                                                 String disabled = "";
 
                                                 if(claim.getStatus() == "SUBMITTED"){out.println("<tr class=\"warning\">");break;}
@@ -569,7 +572,7 @@
                                                 else {out.println("<tr class=\"active text-muted\">");}
 
                                                 out.println("<td>" + (i+1) + "</td>");
-                                                out.println("<td>" + claim.getMem_id() + "</td>");
+                                                out.println("<td>" + claim.getMemId() + "</td>");
 
                                                 String claimDate = DATE_FORMAT.format(claim.getDate());
 
@@ -578,7 +581,7 @@
                                                 out.println("<td>" + claim.getStatus() + "</td>");
                                                 out.println("<td>&#163; " + claim.getAmount() + "</td>");
                                                 out.println("<td>");
-                                                out.println("<form action=\"update-claims\" method=\"POST\">");
+                                                out.println("<form action=\"HandleClaimsServlet\" method=\"POST\">");
                                                 if(!claim.getStatus().equals("SUBMITTED")){
                                                     disabled = "disabled";
                                                 }
@@ -643,14 +646,14 @@
                                         out.println("</td>");
                                         out.println("<td class=\"col-md-3\">");
                                         if(!user.isUserValid().equals("DELETED")){
-                                            out.println("<form action=\"charge-member\" method=\"POST\">");
+                                            out.println("<form action=\"ChargeSingleServlet\" method=\"POST\">");
                                             out.println("<div class=\"form-group\">");
                                             out.println("<button type=\"submit\"class=\"btn btn-default btn-block\" "
                                                     + "id=\"distributed\" name=\"distributed\" "
                                                     + "value=\""+df.format(average)+"\" data-toggle=\"modal\" "
                                                     + "data-target=\"#dimmer\">Distributed Average</button>");
                                             out.println("</div></form>");
-                                            out.println("<form action=\"charge-member\" method=\"POST\">");
+                                            out.println("<form action=\"ChargeSingleServlet\" method=\"POST\">");
                                             out.println("<div class=\"form-group\">");
                                             out.println("<button type=\"submit\"class=\"btn btn-default btn-block\" "
                                                     + "id=\"fees\" name=\"fees\" "

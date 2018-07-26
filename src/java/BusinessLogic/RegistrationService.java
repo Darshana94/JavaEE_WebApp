@@ -78,7 +78,7 @@ public class RegistrationService {
                     memberModel.setAddress(newUser.getAddress());
                     memberModel.setDob(newUser.getDOB());
                     memberModel.setDor(new Date());
-                    memberModel.setStatus("Applied");
+                    memberModel.setStatus("APPLIED");
                     memberModel.setBalance((float) -10.00);
                     
 

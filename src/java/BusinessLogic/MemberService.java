@@ -13,6 +13,8 @@ import Util.NewHibernateUtil;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,7 +28,24 @@ import org.hibernate.Transaction;
  */
 public class MemberService {
     
-    public List getAllRecords()
+    public List<Members> getAllRecords()
+    {
+        Session session = null;
+        Transaction tx = null;
+        List<Members> list = new ArrayList<Members>();
+        
+        session = NewHibernateUtil.getSessionFactory().openSession();
+        tx = session.getTransaction();
+        tx.begin();
+
+        list = session.createQuery("FROM Members").list();        
+        
+        tx.commit();
+        session.close();
+        return list;
+    }
+        
+    public List getAll()
     {
         Session session = null;
         Transaction tx = null;
@@ -42,12 +61,15 @@ public class MemberService {
         
         queryResult.forEach(element -> {
             
+            String[] split = element.getName().split(" ");
+            
             userModel.setID(element.getId());
             userModel.setAddress(element.getAddress());
             userModel.setBalance(element.getBalance());
             userModel.setDOB(element.getDob().toString());
             userModel.setDOR(element.getDor());
-            userModel.setFirstName(element.getName());
+            userModel.setFirstName(split[0]);
+            userModel.setLastName(split[1]);
             userModel.setUserValid(element.getStatus());
             
             list.add(userModel);
@@ -72,8 +94,11 @@ public class MemberService {
         Query query = session.createQuery("FROM Members where id ='" +id + "'");
         Members queryResult = (Members)query.uniqueResult();
         
+        String[] split = queryResult.getName().split(" ");
+        
         user.setID(queryResult.getId());
-        user.setFirstName(queryResult.getName());
+        user.setFirstName(split[0]);
+        user.setLastName(split[1]);
         user.setUserValid(queryResult.getStatus());
         user.setAddress(queryResult.getAddress());
         user.setDOB(queryResult.getDob().toString());
@@ -86,129 +111,107 @@ public class MemberService {
         return user;
     }
     
-    public List getRecordsById(String id)
-    {
-        Session session = null;
-        Transaction tx = null;
-        List list = new ArrayList();
-        
-        session = NewHibernateUtil.getSessionFactory().openSession();
-        tx = session.getTransaction();
-        tx.begin();
-
-        Query query = session.createQuery("FROM Members where id = '" +id+"'");
-        List<Members> queryResult = (List<Members>)query.list();
-        
-        queryResult.forEach(element -> {
-            list.add(element);
-        });
-        
-        tx.commit();
-        session.close();
-        return list;
-    }
-    
-    public List getRecordsByStatus(String status)
-    {
-        Session session = null;
-        Transaction tx = null;
-        List list = new ArrayList();
-        
-        session = NewHibernateUtil.getSessionFactory().openSession();
-        tx = session.getTransaction();
-        tx.begin();
-
-        Query query = session.createQuery("FROM Members where status = '" +status+"'");
-        List<Members> queryResult = (List<Members>)query.list();
-        
-        queryResult.forEach(element -> {
-            list.add(element);
-        });
-        
-        tx.commit();
-        session.close();
-        return list;
-    }
+//    public List getRecordsById(String id)
+//    {
+//        Session session = null;
+//        Transaction tx = null;
+//        List list = new ArrayList();
+//        
+//        session = NewHibernateUtil.getSessionFactory().openSession();
+//        tx = session.getTransaction();
+//        tx.begin();
+//
+//        Query query = session.createQuery("FROM Members where id = '" +id+"'");
+//        List<Members> queryResult = (List<Members>)query.list();
+//        
+//        queryResult.forEach(element -> {
+//            list.add(element);
+//        });
+//        
+//        tx.commit();
+//        session.close();
+//        return list;
+//    }
+//    
+//    public List getRecordsByStatus(String status)
+//    {
+//        Session session = null;
+//        Transaction tx = null;
+//        List list = new ArrayList();
+//        
+//        session = NewHibernateUtil.getSessionFactory().openSession();
+//        tx = session.getTransaction();
+//        tx.begin();
+//
+//        Query query = session.createQuery("FROM Members where status = '" +status+"'");
+//        List<Members> queryResult = (List<Members>)query.list();
+//        
+//        queryResult.forEach(element -> {
+//            list.add(element);
+//        });
+//        
+//        tx.commit();
+//        session.close();
+//        return list;
+//    }
     
     public String getColumn(String id,String column){
-        //Session session = null;
-        //Transaction tx = null;
-        //List list = new ArrayList();
+        Session session = null;
+        Transaction tx = null;
+        List list = new ArrayList();
         
-        //session = NewHibernateUtil.getSessionFactory().openSession();
-        //tx = session.getTransaction();
-       // tx.begin();
+        session = NewHibernateUtil.getSessionFactory().openSession();
+        tx = session.getTransaction();
+        tx.begin();
         
-     //   Query query = session.createQuery( "SELECT " + column + " FROM members WHERE id='" + id + "'");
-     //   String result = "";
-     //   try{
-     //       Members queryResult = (Members)query.uniqueResult();
-     //           result = queryResult.getString(column);
-      //      }
-      //      rs.close();
-      //      conn.close();
-    return null;  
+        Query query = session.createQuery( "SELECT " + column + " FROM members WHERE id='" + id + "'");       
+        Members queryResult = (Members)query.uniqueResult();
+
+        tx.commit();
+        session.close();
+        
+        return queryResult.toString();  
     }
-    
-    public String RegisterUser(Registration newUser) throws SQLException, IOException{
-            
-            String result = "false";
-            Session s = null;
-            try
-            {
-            s = NewHibernateUtil.getSessionFactory().openSession();
-            Transaction tr = s.getTransaction();
-            
-            Users userModel = new Users();
-                userModel.setId(newUser.getID());
-                userModel.setPassword(newUser.getPassword());
-                userModel.setStatus("APPLIED");
-            
-            Members memberModel = new Members();
-                    memberModel.setId(newUser.getID());
-                    memberModel.setName(result);
-                    memberModel.setAddress(result);
-                    memberModel.setDob(null);
-                    memberModel.setDor(new Date());
-                    memberModel.setStatus("Applied");
-                    memberModel.setBalance((float) -10.00);
-                    
-
-            tr.begin();
-            s.save(newUser);
-            tr.commit();
-
-            result = "User details successfully updated.";
-            return result;
-            }
-            catch (Exception e)
-            {
-            return (e.getMessage());
-            }
-            finally
-            {
-                s.close();
-            }
-        }
     
     public String editDetails(User user)throws SQLException,IOException{
         
         Session session = null;
         Transaction tx = null;
+        SimpleDateFormat format = new SimpleDateFormat("dd-MMM-yyyy");
         
         session = NewHibernateUtil.getSessionFactory().openSession();
         tx = session.getTransaction();
         tx.begin();
         
-        Query query = session.createQuery("UPDATE members SET " + 
-                                            "name='" + user.getFirstName() + " " + user.getLastName() + "'," + 
-                                            "address='"+ user.getAddress() +"'," +
-                                            "dob='"+ user.getDOB() +"'" +
-                                            "WHERE id='"+ user.getID() + "';");
+        Members m = (Members) session.get(Members.class, user.getID());
+        m.setName(user.getFirstName() + " " + user.getLastName());
+        m.setAddress(user.getAddress());
+        try {
+            m.setDob(format.parse(user.getDOB()));
+        } catch (ParseException e) {
+        }
         
-        query.uniqueResult();
-        String result = "User details successfully updated.";
         
+//        Query query = session.createQuery("UPDATE Members SET " + 
+//                                            "name='" + user.getFirstName() + " " + user.getLastName() + "'," + 
+//                                            "address='"+ user.getAddress() +"'," +
+//                                            "dob='"+ user.getDOB() +"'" +
+//                                            "WHERE id='"+ user.getID() + "'");
+//        
+//        Members memModel = (Members)query.uniqueResult();
+//        
+//        memModel.setName(user.getFirstName() + " " + user.getLastName());
+//        memModel.setAddress(user.getAddress());
+//        try {
+//            memModel.setDob(format.parse(user.getDOB()));
+//        } catch (ParseException e) {
+//        }
+//        
+//        session.update(memModel);
+        tx.commit();
+        session.close();
+        
+        String result = "User details successfully updated.";        
         return result;
     }
     
@@ -216,20 +219,38 @@ public class MemberService {
         
         Session session = null;
         Transaction tx = null;
-        List list = new ArrayList();
         
         session = NewHibernateUtil.getSessionFactory().openSession();
         tx = session.getTransaction();
         tx.begin();
-
-        Query query1 = session.createQuery("DELETE FROM Users WHERE id='" + id + "'");
-        Query query2 = session.createQuery("UPDATE Members SET status='DELETED' WHERE id='" + id + "';");
-        query1.uniqueResult();
-        query2.uniqueResult();
         
-        String result = "User " + id + " has been deleted.";
+        User u = (User) session.load(Users.class, id);
+        session.delete(u);
+        Members m = (Members) session.get(Members.class, id);
+        m.setStatus("DELETE");
         
+        tx.commit();
+        session.close();
+        
+        String result = "User " + id + " has been deleted.";        
         return result;
+    }
+    
+ 
+    public void updateStatus(String user, String status){
+        
+        Session session = null;
+        Transaction tx = null;
+        session = NewHibernateUtil.getSessionFactory().openSession();
+        tx = session.getTransaction();
+        tx.begin();
+        
+        Members memModel = (Members) session.get(Members.class, user);        
+        memModel.setStatus(status);
+        
+        tx.commit();
+        session.close();
+
     }
     
 }
